@@ -1,25 +1,44 @@
 package main
 
 import (
-    "flag"
-    "fmt"
-    "os"
+	"fmt"
+	"os"
+
+	"kclone-go/pkg/state"
+
+	"github.com/spf13/cobra"
 )
 
-// Placeholder entry point for a Go-based version of the Kubernetes clone.
-// Extend this with real scheduling, services, and lifecycle logic.
-func main() {
-    version := flag.Bool("version", false, "print version")
-    flag.Parse()
+var clusterState *state.ClusterState
 
-    if *version {
-        fmt.Println("kclone-go v0.0.1-placeholder")
-        return
-    }
-
-    fmt.Println("kclone-go: placeholder CLI. TODO: implement nodes/pods/services/scheduling.")
-    fmt.Println("Try: go run ./cmd/kclone --version")
-    if len(os.Args) == 1 {
-        fmt.Println("No commands implemented yet.")
-    }
+func init() {
+	clusterState = state.NewClusterState()
 }
+
+func main() {
+	rootCmd := &cobra.Command{
+		Use:   "kclone",
+		Short: "Simplified Kubernetes-style cluster manager",
+		Long:  "A lightweight orchestrator with pod scheduling, services, and replica management",
+	}
+
+	rootCmd.AddCommand(
+		nodeAddCmd(),
+		nodesCmd(),
+		podCreateCmd(),
+		podsCmd(),
+		podDeleteCmd(),
+		deployCreateCmd(),
+		deployScaleCmd(),
+		serviceCreateCmd(),
+		servicesCmd(),
+		serviceRouteCmd(),
+		statusCmd(),
+	)
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+

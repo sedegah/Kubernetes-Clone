@@ -1,12 +1,12 @@
 # Kubernetes-Clone
 
-Simplified, in-memory Kubernetes-style orchestrator built in Python for learning purposes. A Go scaffold lives alongside it for future work.
+Simplified, in-memory Kubernetes-style orchestrator with implementations in both Python and Go for learning purposes.
 
 ## Layout
-- `python/` — full Python implementation (CLI, scheduler, services, persistence, tests)
-- `go/` — Go scaffold (placeholder main, ready for expansion)
+- `python/` — Python implementation with CLI, scheduler, services, persistence, and tests
+- `go/` — Go implementation with Cobra CLI, scheduler, services, and replica management
 
-## Python quick start
+## Python Quick Start
 1) Create a virtual environment inside `python/` and install deps:
 	- `cd python`
 	- `python -m venv .venv`
@@ -37,7 +37,29 @@ Simplified, in-memory Kubernetes-style orchestrator built in Python for learning
 ## Tests (Python)
 - From `python/`, run: `pytest`
 
-## Go scaffold
-- Location: `go/`
-- Build/run: `cd go && go run ./cmd/kclone`
-- Currently a minimal placeholder to extend with a Go implementation of the orchestrator.
+## Go Quick Start
+- Build: `cd go && go build -o kclone ./cmd/kclone`
+- Run help: `./kclone --help`
+- Demo: `cd go && go run ./cmd/demo`
+
+## Go Commands
+Each CLI invocation is stateless. Use `go run ./cmd/demo` for a persistent demo session showing full orchestration.
+
+- Add node: `go run ./cmd/kclone node-add node-a --cpu 4 --mem 4096`
+- List nodes: `go run ./cmd/kclone nodes`
+- Create pod: `go run ./cmd/kclone pod-create web-1 --image nginx:latest --labels app=web`
+- List pods: `go run ./cmd/kclone pods`
+- Delete pod: `go run ./cmd/kclone pod-delete pod-1`
+- Create deployment: `go run ./cmd/kclone deploy-create web --image nginx:latest --replicas 3`
+- Scale deployment: `go run ./cmd/kclone deploy-scale web --replicas 2`
+- Create service: `go run ./cmd/kclone service-create web --selector app=web --port 80`
+- Route request: `go run ./cmd/kclone service-route web`
+- Cluster status: `go run ./cmd/kclone status`
+
+## Implementation Details
+Both implementations provide:
+- **Pod scheduling** with resource-aware placement
+- **Service abstraction** with virtual IPs and round-robin routing
+- **Replica management** via deployments
+- **Resource tracking** at node and cluster level
+- **CLI** for managing the orchestrator
