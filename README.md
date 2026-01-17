@@ -1,65 +1,102 @@
 # Kubernetes-Clone
 
-Simplified, in-memory Kubernetes-style orchestrator with implementations in both Python and Go for learning purposes.
+Simplified, in-memory Kubernetes-style orchestrator with implementations in both Python and Go for educational purposes.
 
-## Layout
-- `python/` — Python implementation with CLI, scheduler, services, persistence, and tests
-- `go/` — Go implementation with Cobra CLI, scheduler, services, and replica management
+## Project Overview
 
-## Python Quick Start
-1) Create a virtual environment inside `python/` and install deps:
-	- `cd python`
-	- `python -m venv .venv`
-	- `source .venv/bin/activate`
-	- `pip install -r requirements.txt`
+This project implements core Kubernetes concepts including:
+- **Pod scheduling** with resource-aware bin-packing placement
+- **Service abstraction** with virtual IPs and round-robin load balancing  
+- **Replica management** via deployment controllers
+- **Resource tracking** at node and cluster level
+- **CLI tools** for cluster management
 
-2) Run the CLI (from `python/`):
-	- `PYTHONPATH=src python -m kclone --help`
+## Repository Structure
 
-## Common Python commands
-- Add nodes: `PYTHONPATH=src python -m kclone node-add node-a --cpu 4 --mem 4096`
-- List nodes: `PYTHONPATH=src python -m kclone nodes`
-- Create a pod: `PYTHONPATH=src python -m kclone pod-create web-1 --image nginx:latest --labels app=web`
-- List pods: `PYTHONPATH=src python -m kclone pods`
-- Delete a pod: `PYTHONPATH=src python -m kclone pod-delete pod-1`
-- Create a deployment: `PYTHONPATH=src python -m kclone deploy-create web --image nginx:latest --replicas 3 --labels app=web`
-- Scale a deployment: `PYTHONPATH=src python -m kclone deploy-scale web --replicas 2`
-- Create a service: `PYTHONPATH=src python -m kclone service-create web --selector app=web --port 80 --target-port 80`
-- Route through a service: `PYTHONPATH=src python -m kclone service-route web`
-- Cluster resource status: `PYTHONPATH=src python -m kclone status`
-- Persist cluster state: `PYTHONPATH=src python -m kclone state-save state.json`
-- Restore cluster state: `PYTHONPATH=src python -m kclone state-load state.json`
+```
+Kubernetes-Clone/
+├── python/          # Python implementation
+│   ├── src/         # Source code
+│   ├── tests/       # Test suite
+│   └── README.md    # Python-specific docs
+├── go/              # Go implementation  
+│   ├── cmd/         # CLI and demo apps
+│   ├── pkg/         # Core packages
+│   └── README.md    # Go-specific docs
+└── README.md        # This file
+```
+
+## Quick Start
+
+### Python Implementation
+```bash
+cd python
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+PYTHONPATH=src python -m kclone --help
+```
+
+### Go Implementation  
+```bash
+cd go
+go run ./cmd/demo  # Run full demo
+# OR
+go run ./cmd/kclone --help  # CLI commands
+```
+
+## Common Workflows
+
+### Python
+### Python
+```bash
+cd python
+PYTHONPATH=src python -m kclone node-add node-a --cpu 4 --mem 4096
+PYTHONPATH=src python -m kclone deploy-create web --image nginx:latest --replicas 3 --labels app=web
+PYTHONPATH=src python -m kclone service-create web --selector app=web --port 80
+PYTHONPATH=src python -m kclone status
+PYTHONPATH=src python -m kclone state-save state.json  # Persist state
+```
+
+### Go
+```bash
+cd go
+go run ./cmd/demo  # Complete orchestration demo with persistent state
+```
+
+## Testing
+
+### Python Tests
+```bash
+cd python
+pytest
+```
+
+### Go Demo
+```bash
+cd go
+go run ./cmd/demo
+```
+
+## Features Comparison
+
+| Feature | Python | Go |
+|---------|--------|-----|
+| Pod Scheduling | ✓ | ✓ |
+| Service Networking | ✓ | ✓ |
+| Replica Management | ✓ | ✓ |
+| Resource Tracking | ✓ | ✓ |
+| CLI Interface | Click | Cobra |
+| Persistence | JSON file | In-memory |
+| Test Suite | pytest | Demo app |
+| Concurrency | Single-threaded | Thread-safe (sync.RWMutex) |
+
+## Documentation
+
+- [Python Implementation Details](python/README.md)
+- [Go Implementation Details](go/README.md)
 
 ## Notes
-- Everything runs in-memory; restarting the CLI resets state.
-- Scheduling will mark pods as failed if no node has sufficient free CPU/memory.
-
-## Tests (Python)
-- From `python/`, run: `pytest`
-
-## Go Quick Start
-- Build: `cd go && go build -o kclone ./cmd/kclone`
-- Run help: `./kclone --help`
-- Demo: `cd go && go run ./cmd/demo`
-
-## Go Commands
-Each CLI invocation is stateless. Use `go run ./cmd/demo` for a persistent demo session showing full orchestration.
-
-- Add node: `go run ./cmd/kclone node-add node-a --cpu 4 --mem 4096`
-- List nodes: `go run ./cmd/kclone nodes`
-- Create pod: `go run ./cmd/kclone pod-create web-1 --image nginx:latest --labels app=web`
-- List pods: `go run ./cmd/kclone pods`
-- Delete pod: `go run ./cmd/kclone pod-delete pod-1`
-- Create deployment: `go run ./cmd/kclone deploy-create web --image nginx:latest --replicas 3`
-- Scale deployment: `go run ./cmd/kclone deploy-scale web --replicas 2`
-- Create service: `go run ./cmd/kclone service-create web --selector app=web --port 80`
-- Route request: `go run ./cmd/kclone service-route web`
-- Cluster status: `go run ./cmd/kclone status`
-
-## Implementation Details
-Both implementations provide:
-- **Pod scheduling** with resource-aware placement
-- **Service abstraction** with virtual IPs and round-robin routing
-- **Replica management** via deployments
-- **Resource tracking** at node and cluster level
-- **CLI** for managing the orchestrator
+- Both implementations use in-memory state by default
+- Python CLI supports state persistence via JSON
+- Go CLI runs stateless; use the demo app for persistent sessions
+- Scheduling uses bin-packing to optimize resource utilization
