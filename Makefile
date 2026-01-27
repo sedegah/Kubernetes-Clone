@@ -23,7 +23,7 @@ help:
 build-go:
 	@echo "Building Go binary..."
 	cd go && go build -o ../kclone ./cmd/kclone
-	@echo "✓ Built kclone binary"
+	@echo " Built kclone binary"
 
 run-demo-go:
 	@echo "Running Go demo..."
@@ -37,7 +37,7 @@ test-go:
 install-python:
 	@echo "Installing Python dependencies..."
 	cd python && pip install -e .
-	@echo "✓ Python package installed"
+	@echo " Python package installed"
 
 run-demo-python:
 	@echo "Running Python demo..."
@@ -49,10 +49,10 @@ test-python:
 
 # Combined targets
 build: build-go
-	@echo "✓ Build complete"
+	@echo " Build complete"
 
 test: test-go test-python
-	@echo "✓ All tests passed"
+	@echo " All tests passed"
 
 demo: run-demo-go
 	@echo ""
@@ -67,7 +67,7 @@ clean:
 	rm -rf python/src/kclone/__pycache__
 	rm -rf python/tests/__pycache__
 	rm -rf python/src/kclone.egg-info
-	@echo "✓ Clean complete"
+	@echo " Clean complete"
 
 # Quick commands
 go: build-go
