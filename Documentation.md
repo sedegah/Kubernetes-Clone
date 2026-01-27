@@ -1,7 +1,3 @@
-Perfect! We can merge the technical depth and structure from your second source into your original documentation, creating a **comprehensive, detailed, and presentation-ready report**. Here's the expanded and enriched version:
-
----
-
 # **Group 43: Simplified Kubernetes Clone (K-Clone)**
 
 **Developed by: Group 43**
@@ -520,12 +516,4 @@ QA includes:
 
 K-Clone demonstrates the core principles of container orchestration: **scheduling, replication, lifecycle management, and resource monitoring**. By building the system from scratch, Group 43 provides a robust learning platform that bridges theoretical knowledge with practical, hands-on experience in cloud-native infrastructure. Its dual-language implementation, modular design, and simplified abstractions make it suitable for academic use, experimentation, and further development.
 
----
-
-This version combines:
-
-* The structure and examples from your original doc
-* The technical depth and **Control Plane vs Worker Node explanation**
-* Practical algorithms (bin-packing, scheduling) and resource management logic
-* Detailed CLI and testing sections
 
