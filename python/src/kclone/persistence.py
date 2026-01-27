@@ -4,14 +4,14 @@ import json
 from pathlib import Path
 from typing import Any, Dict
 
-from .models import Deployment, Node, Pod, PodSpec, PodStatus, Service
+from .models import Deployment, HealthCheck, Node, Pod, PodSpec, PodStatus, Service
 from .state import ClusterState
 
 
 def _state_to_dict(state: ClusterState) -> Dict[str, Any]:
     return {
-        "uid_counter": state._uid_counter,  # type: ignore[attr-defined]
-        "vip_counter": state._vip_counter,  # type: ignore[attr-defined]
+        "uid_counter": getattr(state, "_uid_counter", 0),
+        "vip_counter": getattr(state, "_vip_counter", 1),
         "nodes": [
             {
                 "name": n.name,
@@ -20,8 +20,10 @@ def _state_to_dict(state: ClusterState) -> Dict[str, Any]:
                 "labels": n.labels,
                 "cpu_allocated": n.cpu_allocated,
                 "mem_allocated": n.mem_allocated,
+                "ready": n.ready,
+                "taints": n.taints,
             }
-            for n in state.nodes.values()
+            for n in state.list_nodes()
         ],
         "pods": [
             {
@@ -33,14 +35,25 @@ def _state_to_dict(state: ClusterState) -> Dict[str, Any]:
                     "cpu_request": p.spec.cpu_request,
                     "mem_request": p.spec.mem_request,
                     "labels": p.spec.labels,
+                    "restart_policy": p.spec.restart_policy,
+                    "health_check": {
+                        "enabled": p.spec.health_check.enabled,
+                        "initial_delay_sec": p.spec.health_check.initial_delay_sec,
+                        "period_sec": p.spec.health_check.period_sec,
+                        "timeout_sec": p.spec.health_check.timeout_sec,
+                        "failure_threshold": p.spec.health_check.failure_threshold,
+                    },
                 },
                 "status": {
                     "phase": p.status.phase,
                     "node_name": p.status.node_name,
                     "message": p.status.message,
+                    "healthy": p.status.healthy,
+                    "restart_count": p.status.restart_count,
+                    "start_time": p.status.start_time,
                 },
             }
-            for p in state.pods.values()
+            for p in state.list_pods()
         ],
         "services": [
             {
@@ -77,6 +90,8 @@ def _dict_to_state(data: Dict[str, Any]) -> ClusterState:
             cpu_capacity=n["cpu_capacity"],
             mem_capacity=n["mem_capacity"],
             labels=n.get("labels", {}),
+            ready=n.get("ready", True),
+            taints=n.get("taints", []),
         )
         node.cpu_allocated = n.get("cpu_allocated", 0)
         node.mem_allocated = n.get("mem_allocated", 0)
@@ -85,17 +100,32 @@ def _dict_to_state(data: Dict[str, Any]) -> ClusterState:
     for p in data.get("pods", []):
         spec_data = p["spec"]
         status_data = p["status"]
+        
+        hc_data = spec_data.get("health_check", {})
+        health_check = HealthCheck(
+            enabled=hc_data.get("enabled", False),
+            initial_delay_sec=hc_data.get("initial_delay_sec", 0),
+            period_sec=hc_data.get("period_sec", 10),
+            timeout_sec=hc_data.get("timeout_sec", 1),
+            failure_threshold=hc_data.get("failure_threshold", 3),
+        )
+        
         spec = PodSpec(
             name=spec_data["name"],
             image=spec_data["image"],
             cpu_request=spec_data.get("cpu_request", 1),
             mem_request=spec_data.get("mem_request", 128),
             labels=spec_data.get("labels", {}),
+            health_check=health_check,
+            restart_policy=spec_data.get("restart_policy", "Always"),
         )
         status = PodStatus(
             phase=status_data.get("phase", "Pending"),
             node_name=status_data.get("node_name"),
             message=status_data.get("message", ""),
+            healthy=status_data.get("healthy", True),
+            restart_count=status_data.get("restart_count", 0),
+            start_time=status_data.get("start_time"),
         )
         pod = Pod(name=p["name"], spec=spec, status=status, uid=p["uid"])
         state.pods[pod.uid] = pod

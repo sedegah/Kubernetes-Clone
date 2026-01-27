@@ -13,10 +13,11 @@ def create_service(state: ClusterState, name: str, selector: dict, port: int, ta
 
 
 def route_request(state: ClusterState, service_name: str) -> str:
-    if service_name not in state.services:
-        raise KeyError(f"Service {service_name} not found")
-    svc = state.services[service_name]
+    # Refresh endpoints before routing
     state.refresh_service_endpoints()
+    svc = state.services.get(service_name)
+    if not svc:
+        raise KeyError(f"Service {service_name} not found")
     if not svc.endpoints:
         raise RuntimeError(f"Service {service_name} has no ready pods")
     pod_uid = svc.endpoints[svc.rr_index % len(svc.endpoints)]

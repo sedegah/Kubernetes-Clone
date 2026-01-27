@@ -31,7 +31,12 @@ def create_deployment(
 
 
 def reconcile_deployments(state: ClusterState) -> None:
-    for deploy in state.deployments.values():
+    """Ensure each deployment has desired replicas. Create or remove pods accordingly.
+
+    This function is intentionally idempotent and safe to call repeatedly.
+    """
+    # iterate over a snapshot of deployments to avoid mutation issues
+    for deploy_name, deploy in list(state.deployments.items()):
         matching = state.select_pods(deploy.selector)
         active = [p for p in matching if p.status.phase in ("Pending", "Running")]
         diff = deploy.replicas - len(active)
@@ -48,8 +53,14 @@ def reconcile_deployments(state: ClusterState) -> None:
                 )
                 state.add_pod(spec)
         elif diff < 0:
-            excess = active[diff:]
+            # remove oldest/excess pods
+            excess = active[deploy.replicas:]
             for pod in excess:
-                state.remove_pod(pod.uid)
+                try:
+                    state.remove_pod(pod.uid)
+                except KeyError:
+                    continue
+        # Try scheduling after adjustments
         schedule_pending_pods(state)
+    # refresh services so endpoints are up-to-date
     state.refresh_service_endpoints()

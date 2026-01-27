@@ -1,8 +1,6 @@
 package scheduler
 
 import (
-	"sort"
-
 	"kclone-go/pkg/models"
 	"kclone-go/pkg/state"
 )
@@ -11,6 +9,14 @@ import (
 func ChooseNode(nodes []*models.Node, pod *models.Pod) *models.Node {
 	var eligible []*models.Node
 	for _, node := range nodes {
+		// Skip nodes that are not ready
+		if !node.Ready {
+			continue
+		}
+		// Skip tainted nodes (simplified - in real K8s, pods can have tolerations)
+		if len(node.Taints) > 0 {
+			continue
+		}
 		if node.Fits(pod.Spec.CPURequest, pod.Spec.MemRequest) {
 			eligible = append(eligible, node)
 		}
@@ -20,19 +26,17 @@ func ChooseNode(nodes []*models.Node, pod *models.Pod) *models.Node {
 		return nil
 	}
 
-	// Sort by most allocated (bin-packing), then by largest capacity
-	sort.Slice(eligible, func(i, j int) bool {
-		allocI := eligible[i].CPUAllocated + eligible[i].MemAllocated
-		allocJ := eligible[j].CPUAllocated + eligible[j].MemAllocated
-		if allocI != allocJ {
-			return allocI < allocJ
+	// Score nodes by available CPU and memory (higher score preferred)
+	best := eligible[0]
+	bestScore := best.CPUAvailable()*1000 + best.MemAvailable()
+	for _, n := range eligible[1:] {
+		score := n.CPUAvailable()*1000 + n.MemAvailable()
+		if score > bestScore {
+			best = n
+			bestScore = score
 		}
-		capI := eligible[i].CPUCapacity + eligible[i].MemCapacity
-		capJ := eligible[j].CPUCapacity + eligible[j].MemCapacity
-		return capI > capJ
-	})
-
-	return eligible[0]
+	}
+	return best
 }
 
 // SchedulePendingPods attempts to schedule all pending pods

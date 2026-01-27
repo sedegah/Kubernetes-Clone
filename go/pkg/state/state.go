@@ -1,6 +1,7 @@
 package state
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -266,4 +267,21 @@ func matchesSelector(labels, selector map[string]string) bool {
 		}
 	}
 	return true
+}
+
+// ToJSON serializes cluster state to JSON
+func (cs *ClusterState) ToJSON() []byte {
+	cs.mu.RLock()
+	defer cs.mu.RUnlock()
+
+	data, _ := json.MarshalIndent(cs, "", "  ")
+	return data
+}
+
+// FromJSON deserializes cluster state from JSON
+func (cs *ClusterState) FromJSON(data []byte) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
+	return json.Unmarshal(data, cs)
 }

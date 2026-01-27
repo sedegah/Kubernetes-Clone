@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"kclone-go/pkg/models"
 	"kclone-go/pkg/scheduler"
 	"kclone-go/pkg/state"
@@ -55,7 +56,7 @@ func ReconcileDeployments(cs *state.ClusterState) {
 }
 
 func getPodName(deployName string, index int) string {
-	return deployName + "-" + string(rune('0'+index))
+	return fmt.Sprintf("%s-%d", deployName, index)
 }
 
 func copyMap(m map[string]string) map[string]string {

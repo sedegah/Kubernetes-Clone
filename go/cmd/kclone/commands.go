@@ -9,6 +9,7 @@ import (
 	"kclone-go/pkg/controllers"
 	"kclone-go/pkg/lifecycle"
 	"kclone-go/pkg/models"
+	"kclone-go/pkg/persistence"
 	"kclone-go/pkg/resource"
 	"kclone-go/pkg/scheduler"
 	"kclone-go/pkg/service"
@@ -322,6 +323,40 @@ func statusCmd() *cobra.Command {
 			fmt.Fprintf(w, "%d\t%d\t%d\t%d\n",
 				caps.CPUUsed, caps.CPUTotal, caps.MemUsed, caps.MemTotal)
 			w.Flush()
+			return nil
+		},
+	}
+}
+
+func stateSaveCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "state-save [path]",
+		Short: "Save cluster state to file",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path := args[0]
+			if err := persistence.SaveState(clusterState, path); err != nil {
+				return err
+			}
+			fmt.Printf("Saved state to %s\n", path)
+			return nil
+		},
+	}
+}
+
+func stateLoadCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "state-load [path]",
+		Short: "Load cluster state from file",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path := args[0]
+			cs, err := persistence.LoadState(path)
+			if err != nil {
+				return err
+			}
+			clusterState = cs
+			fmt.Printf("Loaded state from %s\n", path)
 			return nil
 		},
 	}

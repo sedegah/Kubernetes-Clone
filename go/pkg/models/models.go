@@ -8,6 +8,8 @@ type Node struct {
 	Labels       map[string]string
 	CPUAllocated int
 	MemAllocated int
+	Ready        bool
+	Taints       []string
 }
 
 // CPUAvailable returns available CPU
@@ -27,26 +29,40 @@ func (n *Node) Fits(cpuRequest, memRequest int) bool {
 
 // PodStatus represents the current state of a pod
 type PodStatus struct {
-	Phase    string // Pending, Running, Failed
-	NodeName string
-	Message  string
+	Phase        string // Pending, Running, Failed
+	NodeName     string
+	Message      string
+	Healthy      bool
+	RestartCount int
+	StartTime    string
+}
+
+// HealthCheck defines health check configuration
+type HealthCheck struct {
+	Enabled          bool
+	InitialDelaySec  int
+	PeriodSec        int
+	TimeoutSec       int
+	FailureThreshold int
 }
 
 // PodSpec defines the desired state of a pod
 type PodSpec struct {
-	Name       string
-	Image      string
-	CPURequest int
-	MemRequest int
-	Labels     map[string]string
+	Name          string
+	Image         string
+	CPURequest    int
+	MemRequest    int
+	Labels        map[string]string
+	HealthCheck   HealthCheck
+	RestartPolicy string // Always, OnFailure, Never
 }
 
 // Pod represents a scheduled workload
 type Pod struct {
-	UID    string
-	Name   string
-	Spec   PodSpec
-	Status PodStatus
+	UID    string    `json:"uid"`
+	Name   string    `json:"name"`
+	Spec   PodSpec   `json:"spec"`
+	Status PodStatus `json:"status"`
 }
 
 // Service represents a network endpoint abstraction
@@ -69,4 +85,14 @@ type Deployment struct {
 	Labels     map[string]string
 	CPURequest int
 	MemRequest int
+}
+
+// Pod helper methods
+func (p *Pod) MarkRunning() {
+	p.Status.Phase = "Running"
+}
+
+func (p *Pod) MarkFailed(msg string) {
+	p.Status.Phase = "Failed"
+	p.Status.Message = msg
 }

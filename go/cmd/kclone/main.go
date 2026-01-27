@@ -34,6 +34,8 @@ func main() {
 		servicesCmd(),
 		serviceRouteCmd(),
 		statusCmd(),
+		stateSaveCmd(),
+		stateLoadCmd(),
 	)
 
 	if err := rootCmd.Execute(); err != nil {
