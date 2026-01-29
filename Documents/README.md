@@ -1,3 +1,4 @@
+````markdown
 
 # Kubernetes-Clone
 
@@ -257,3 +258,5 @@ If you want to extend or fix things:
 ## License & Notes
 
 This repository is intended for educational use. See individual package READMEs in `go/` and `python/` for implementation details.
+
+````

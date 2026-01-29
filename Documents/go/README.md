@@ -1,3 +1,4 @@
+````markdown
 # Go Implementation
 
 See [../README.md](../README.md) for full project documentation.
@@ -39,3 +40,5 @@ go run ./cmd/demo
 ```
 
 
+
+````

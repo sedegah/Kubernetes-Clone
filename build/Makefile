@@ -63,7 +63,12 @@ demo: run-demo-go
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -f kclone
-include build/Makefile
+	rm -rf go/kclone
+	rm -rf python/src/kclone/__pycache__
+	rm -rf python/tests/__pycache__
+	rm -rf python/src/kclone.egg-info
+	@echo " Clean complete"
+
 # Quick commands
 go: build-go
 	./kclone --help
