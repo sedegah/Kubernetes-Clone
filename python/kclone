@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Wrapper to run the Python kclone CLI from the workspace
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+export PYTHONPATH="$REPO_ROOT/python/src":${PYTHONPATH-}
+
+# Default DB for Python implementation
+DEFAULT_DB="$REPO_ROOT/python_cluster.db"
+
+# If running the control-loop and no positional DB path is provided, append default DB
+if [ "${1-}" = "control-loop" ]; then
+	# If help flag requested, pass through unchanged
+	for a in "$@"; do
+		if [ "$a" = "--help" ] || [ "$a" = "-h" ]; then
+			exec python3 -m kclone.cli "$@"
+		fi
+	done
+	# Check if any argument after the command is a positional (doesn't start with -)
+	has_positional=false
+	shiftcount=0
+	for a in "${@:2}"; do
+		shiftcount=$((shiftcount+1))
+		case "$a" in
+			-*) ;;
+			*) has_positional=true; break ;;
+		esac
+	done
+	if [ "$has_positional" = "false" ]; then
+		set -- "$@" "$DEFAULT_DB"
+	fi
+fi
+
+exec python3 -m kclone.cli "$@"

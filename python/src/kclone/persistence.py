@@ -6,6 +6,7 @@ from typing import Any, Dict
 
 from .models import Deployment, HealthCheck, Node, Pod, PodSpec, PodStatus, Service
 from .state import ClusterState
+from . import db as _db
 
 
 def _state_to_dict(state: ClusterState) -> Dict[str, Any]:
@@ -162,10 +163,18 @@ def _dict_to_state(data: Dict[str, Any]) -> ClusterState:
 
 
 def save_state(state: ClusterState, path: str | Path) -> None:
+    # Use DB store when path ends with .db; otherwise export JSON
+    p = str(path)
+    if p.endswith('.db'):
+        _db.save_state_to_db(state, path)
+        return
     payload = _state_to_dict(state)
     Path(path).write_text(json.dumps(payload, indent=2))
 
 
 def load_state(path: str | Path) -> ClusterState:
+    p = str(path)
+    if p.endswith('.db'):
+        return _db.load_state_from_db(path)
     data = json.loads(Path(path).read_text())
     return _dict_to_state(data)

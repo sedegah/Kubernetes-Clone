@@ -64,6 +64,7 @@ class Pod:
     spec: PodSpec
     status: PodStatus = field(default_factory=PodStatus)
     uid: str = ""
+    pid: Optional[int] = None
 
     def mark_running(self) -> None:
         self.status.phase = "Running"

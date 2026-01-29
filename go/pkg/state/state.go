@@ -15,8 +15,8 @@ type ClusterState struct {
 	Pods        map[string]*models.Pod
 	Services    map[string]*models.Service
 	Deployments map[string]*models.Deployment
-	uidCounter  int
-	vipCounter  int
+	UIDCounter  int `json:"uidCounter"`
+	VIPCounter  int `json:"vipCounter"`
 }
 
 // NewClusterState creates a new cluster state
@@ -26,8 +26,8 @@ func NewClusterState() *ClusterState {
 		Pods:        make(map[string]*models.Pod),
 		Services:    make(map[string]*models.Service),
 		Deployments: make(map[string]*models.Deployment),
-		uidCounter:  0,
-		vipCounter:  1,
+		UIDCounter:  0,
+		VIPCounter:  1,
 	}
 }
 
@@ -48,8 +48,8 @@ func (cs *ClusterState) AddPod(spec models.PodSpec) *models.Pod {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cs.uidCounter++
-	uid := fmt.Sprintf("pod-%d", cs.uidCounter)
+	cs.UIDCounter++
+	uid := fmt.Sprintf("pod-%d", cs.UIDCounter)
 	pod := &models.Pod{
 		UID:  uid,
 		Name: spec.Name,
@@ -189,8 +189,8 @@ func (cs *ClusterState) AllocateVirtualIP() string {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	vip := fmt.Sprintf("10.96.0.%d", cs.vipCounter)
-	cs.vipCounter++
+	vip := fmt.Sprintf("10.96.0.%d", cs.VIPCounter)
+	cs.VIPCounter++
 	return vip
 }
 
@@ -258,6 +258,29 @@ func (cs *ClusterState) GetService(name string) (*models.Service, bool) {
 
 	svc, exists := cs.Services[name]
 	return svc, exists
+}
+
+// RemoveNode removes a node from the cluster and unschedules any pods bound to it.
+func (cs *ClusterState) RemoveNode(name string) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
+	if _, exists := cs.Nodes[name]; !exists {
+		return fmt.Errorf("node %s not found", name)
+	}
+
+	// Remove the node
+	delete(cs.Nodes, name)
+
+	// For any pods that were scheduled on this node, mark them Pending and clear node assignment
+	for _, pod := range cs.Pods {
+		if pod.Status.NodeName == name {
+			pod.Status.NodeName = ""
+			pod.Status.Phase = "Pending"
+		}
+	}
+
+	return nil
 }
 
 func matchesSelector(labels, selector map[string]string) bool {

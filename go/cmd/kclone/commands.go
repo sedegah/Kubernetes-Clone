@@ -7,6 +7,7 @@ import (
 	"text/tabwriter"
 
 	"kclone-go/pkg/controllers"
+	"kclone-go/pkg/db"
 	"kclone-go/pkg/lifecycle"
 	"kclone-go/pkg/models"
 	"kclone-go/pkg/persistence"
@@ -38,29 +39,36 @@ func nodeAddCmd() *cobra.Command {
 	var labels string
 
 	cmd := &cobra.Command{
-		Use:   "node-add [name]",
-		Short: "Add a node to the cluster",
-		Args:  cobra.ExactArgs(1),
+		Use:     "node-add [name]",
+		Aliases: []string{"node", "n"},
+		Short:   "Add a node to the cluster",
+		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			name := args[0]
+			name := strings.Join(args, " ")
 			node := &models.Node{
 				Name:        name,
 				CPUCapacity: cpu,
 				MemCapacity: mem,
 				Labels:      parseLabels(labels),
+				Ready:       true,
 			}
 			if err := clusterState.AddNode(node); err != nil {
 				return err
 			}
 			fmt.Printf("Added node %s\n", name)
 			scheduler.SchedulePendingPods(clusterState)
+			if dbPath != "" {
+				if err := db.SaveState(clusterState, dbPath); err != nil {
+					return err
+				}
+			}
 			return nil
 		},
 	}
 
-	cmd.Flags().IntVar(&cpu, "cpu", 4, "CPU capacity")
-	cmd.Flags().IntVar(&mem, "mem", 4096, "Memory capacity in MB")
-	cmd.Flags().StringVar(&labels, "labels", "", "Comma-separated key=value labels")
+	cmd.Flags().IntVarP(&cpu, "cpu", "c", 4, "CPU capacity")
+	cmd.Flags().IntVarP(&mem, "mem", "m", 4096, "Memory capacity in MB")
+	cmd.Flags().StringVarP(&labels, "labels", "l", "", "Comma-separated key=value labels")
 
 	return cmd
 }
@@ -93,9 +101,10 @@ func podCreateCmd() *cobra.Command {
 	var cpu, mem int
 
 	cmd := &cobra.Command{
-		Use:   "pod-create [name]",
-		Short: "Create a pod",
-		Args:  cobra.ExactArgs(1),
+		Use:     "pod-create [name]",
+		Aliases: []string{"pod", "pod-add", "p"},
+		Short:   "Create a pod",
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 			spec := models.PodSpec{
@@ -107,15 +116,20 @@ func podCreateCmd() *cobra.Command {
 			}
 			pod := lifecycle.CreatePod(clusterState, spec)
 			fmt.Printf("Created pod %s -> %s\n", pod.UID, pod.Status.Phase)
+			if dbPath != "" {
+				if err := db.SaveState(clusterState, dbPath); err != nil {
+					return err
+				}
+			}
 			return nil
 		},
 	}
 
-	cmd.Flags().StringVar(&image, "image", "", "Container image (required)")
+	cmd.Flags().StringVarP(&image, "image", "i", "", "Container image (required)")
 	cmd.MarkFlagRequired("image")
-	cmd.Flags().IntVar(&cpu, "cpu", 1, "CPU request")
-	cmd.Flags().IntVar(&mem, "mem", 128, "Memory request in MB")
-	cmd.Flags().StringVar(&labels, "labels", "", "Comma-separated key=value labels")
+	cmd.Flags().IntVarP(&cpu, "cpu", "c", 1, "CPU request")
+	cmd.Flags().IntVarP(&mem, "mem", "m", 128, "Memory request in MB")
+	cmd.Flags().StringVarP(&labels, "labels", "l", "", "Comma-separated key=value labels")
 
 	return cmd
 }
@@ -155,6 +169,34 @@ func podDeleteCmd() *cobra.Command {
 				return err
 			}
 			fmt.Printf("Deleted pod %s\n", uid)
+			if dbPath != "" {
+				if err := db.SaveState(clusterState, dbPath); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	}
+}
+
+func nodeDeleteCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "remove-node [name]",
+		Aliases: []string{"node-delete", "node-rm", "rm-node"},
+		Short:   "Remove a node from the cluster",
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			if err := clusterState.RemoveNode(name); err != nil {
+				return err
+			}
+			fmt.Printf("Removed node %s\n", name)
+			// persist
+			if dbPath != "" {
+				if err := db.SaveState(clusterState, dbPath); err != nil {
+					return err
+				}
+			}
 			return nil
 		},
 	}
@@ -196,6 +238,11 @@ func deployCreateCmd() *cobra.Command {
 			}
 			controllers.ReconcileDeployments(clusterState)
 			fmt.Printf("Created deployment %s with %d replicas\n", name, replicas)
+			if dbPath != "" {
+				if err := db.SaveState(clusterState, dbPath); err != nil {
+					return err
+				}
+			}
 			return nil
 		},
 	}
@@ -228,6 +275,11 @@ func deployScaleCmd() *cobra.Command {
 			deploy.Replicas = replicas
 			controllers.ReconcileDeployments(clusterState)
 			fmt.Printf("Scaled %s to %d replicas\n", name, replicas)
+			if dbPath != "" {
+				if err := db.SaveState(clusterState, dbPath); err != nil {
+					return err
+				}
+			}
 			return nil
 		},
 	}
@@ -259,6 +311,11 @@ func serviceCreateCmd() *cobra.Command {
 				return err
 			}
 			fmt.Printf("Created service %s with VIP %s\n", name, svc.VirtualIP)
+			if dbPath != "" {
+				if err := db.SaveState(clusterState, dbPath); err != nil {
+					return err
+				}
+			}
 			return nil
 		},
 	}
