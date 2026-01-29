@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+import time
 import click
 from tabulate import tabulate
 
@@ -32,17 +34,60 @@ def parse_labels(label_str: str | None) -> dict:
 
 @click.group()
 @click.option("--db", "db_path", default=None, help="Path to SQLite DB to use as state store")
+@click.option("--up", is_flag=True, default=False, help="Bring the cluster up with a banner")
 @click.pass_context
-def cli(ctx, db_path: str | None) -> None:
+def cli(ctx, db_path: str | None, up: bool) -> None:
     """Simplified Kubernetes-style cluster manager."""
     ctx.ensure_object(dict)
     ctx.obj["db_path"] = db_path
+    ctx.obj["up"] = up
     global state
     if db_path:
         try:
             state = load_state_from_db(db_path)
         except Exception:
             state = ClusterState()
+
+    # If the group was invoked with --up and no subcommand, show banner and exit
+    if up and ctx.invoked_subcommand is None:
+        _print_banner()
+        sys.exit(0)
+
+
+def _print_banner() -> None:
+    banner = [
+        " █████   ████            █████                                             █████                          █████████  ████                              ",
+        " ░░███   ███░            ░░███                                             ░░███                          ███░░░░░███░░███                              ",
+        "  ░███  ███    █████ ████ ░███████   ██████  ████████  ████████    ██████  ███████    ██████   █████     ███     ░░░  ░███   ██████  ████████    ██████ ",
+        "  ░███████    ░░███ ░███  ░███░░███ ███░░███░░███░░███░░███░░███  ███░░███░░░███░    ███░░███ ███░░     ░███          ░███  ███░░███░░███░░███  ███░░███",
+        "  ░███░░███    ░███ ░███  ░███ ░███░███████  ░███ ░░░  ░███ ░███ ░███████   ░███    ░███████ ░░█████    ░███          ░███ ░███ ░███ ░███ ░███ ░███████ ",
+        "  ░███ ░░███   ░███ ░███  ░███ ░███░███░░░   ░███      ░███ ░███ ░███░░░    ░███ ███░███░░░   ░░░░███   ░░███     ███ ░███ ░███ ░███ ░███ ░███ ░███░░░  ",
+        " █████ ░░████ ░░████████ ████████ ░░██████  █████     ████ █████░░██████   ░░█████ ░░██████  ██████     ░░█████████  █████░░██████  ████ █████░░██████ ",
+        "░░░░░   ░░░░   ░░░░░░░░ ░░░░░░░░   ░░░░░░  ░░░░░     ░░░░ ░░░░░  ░░░░░░     ░░░░░   ░░░░░░  ░░░░░░       ░░░░░░░░░  ░░░░░  ░░░░░░  ░░░░ ░░░░░  ░░░░░░  ",
+        "                                                                                                                                                       ",
+        "                                                                                                                                                       ",
+        "                                                                                                                                                       ",
+        "   █████████                                             █████ █████   ████████                                                                        ",
+        "  ███░░░░░███                                           ░░███ ░░███   ███░░░░███                                                                       ",
+        " ███     ░░░  ████████   ██████  █████ ████ ████████     ░███  ░███ █░░░    ░███                                                                       ",
+        "░███         ░░███░░███ ███░░███░░███ ░███ ░░███░░███    ░███████████   ██████░                                                                        ",
+        "░███    █████ ░███ ░░░ ░███ ░███ ░███ ░███  ░███ ░███    ░░░░░░░███░█  ░░░░░░███                                                                       ",
+        "░░███  ░░███  ░███     ░███ ░███ ░███ ░███  ░███ ░███          ░███░  ███   ░███                                                                       ",
+        " ░░█████████  █████    ░░██████  ░░████████ ░███████           █████ ░░████████                                                                        ",
+        "  ░░░░░░░░░  ░░░░░      ░░░░░░    ░░░░░░░░  ░███░░░           ░░░░░   ░░░░░░░░                                                                         ",
+        "                                            ░███                                                                                                       ",
+        "                                            █████                                                                                                      ",
+        "                                           ░░░░░                                                                                                      ",
+    ]
+    for line in banner:
+        click.echo(line)
+        time.sleep(0.08)
+
+
+@cli.command("up")
+def up_cmd() -> None:
+    """Show the cluster banner/up animation."""
+    _print_banner()
 
 
 @cli.command("node-add")
