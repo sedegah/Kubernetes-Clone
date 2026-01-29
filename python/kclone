@@ -1,33 +1,56 @@
-#!/usr/bin/env bash
-set -euo pipefail
-# Wrapper to run the Python kclone CLI from the workspace
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-export PYTHONPATH="$REPO_ROOT/python/src":${PYTHONPATH-}
+#!/usr/bin/env python3
+"""Lightweight Python launcher for the `kclone` package.
 
-# Default DB for Python implementation
-DEFAULT_DB="$REPO_ROOT/python_cluster.db"
+This script mirrors the original bash wrapper but can be invoked with
+`python ./kclone` as well as executed directly after `chmod +x`.
+"""
+import os
+import sys
+import runpy
 
-# If running the control-loop and no positional DB path is provided, append default DB
-if [ "${1-}" = "control-loop" ]; then
-	# If help flag requested, pass through unchanged
-	for a in "$@"; do
-		if [ "$a" = "--help" ] || [ "$a" = "-h" ]; then
-			exec python3 -m kclone.cli "$@"
-		fi
-	done
-	# Check if any argument after the command is a positional (doesn't start with -)
-	has_positional=false
-	shiftcount=0
-	for a in "${@:2}"; do
-		shiftcount=$((shiftcount+1))
-		case "$a" in
-			-*) ;;
-			*) has_positional=true; break ;;
-		esac
-	done
-	if [ "$has_positional" = "false" ]; then
-		set -- "$@" "$DEFAULT_DB"
-	fi
-fi
 
-exec python3 -m kclone.cli "$@"
+def repo_root() -> str:
+	return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+
+def main(argv: list[str]) -> int:
+	root = repo_root()
+	src_path = os.path.join(root, "python", "src")
+
+	# Ensure local package path is first on sys.path and PYTHONPATH
+	if src_path not in sys.path:
+		sys.path.insert(0, src_path)
+	os.environ["PYTHONPATH"] = src_path + os.pathsep + os.environ.get("PYTHONPATH", "")
+
+	DEFAULT_DB = os.path.join(root, "python_cluster.db")
+
+	args = list(argv)
+
+	# If running the control-loop and no positional DB path is provided, append default DB
+	if len(args) >= 1 and args[0] == "control-loop":
+		if "--help" in args or "-h" in args:
+			# let the module handle help flags
+			pass
+		else:
+			# check for any positional argument after the command (doesn't start with '-')
+			has_positional = any(not a.startswith("-") for a in args[1:])
+			if not has_positional:
+				args.append(DEFAULT_DB)
+
+	# Set sys.argv for module execution and run the package as a module
+	sys.argv = [sys.argv[0]] + args
+	try:
+		# Run package entrypoint (equivalent to `python -m kclone`)
+		runpy.run_module("kclone", run_name="__main__")
+		return 0
+	except SystemExit as e:
+		# Propagate normal exits
+		code = e.code if isinstance(e.code, int) else 0
+		return code
+	except Exception as e:  # pragma: no cover - surface errors to user
+		print(f"Error running kclone: {e}", file=sys.stderr)
+		return 1
+
+
+if __name__ == "__main__":
+	raise SystemExit(main(sys.argv[1:]))
