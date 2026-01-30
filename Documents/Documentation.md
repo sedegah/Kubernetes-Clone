@@ -2,8 +2,8 @@
 
 **Developed by: Group 43**
 --
-1.Kimathi Sedegah - 22237205
-2.Virtus Dakura - 22052950
+1. Kimathi Sedegah - 22237205  
+2. Virtus Dakura - 22052950
 ---
 
 ## **Table of Contents**
