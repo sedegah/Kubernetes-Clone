@@ -1,7 +1,6 @@
 # **Group 43: Simplified Kubernetes Clone (K-Clone)**
 
 **Developed by: Group 43**
-**Group Members
 --
 1.Kimathi Sedegah - 22237205
 ---
