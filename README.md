@@ -10,7 +10,7 @@ Simplified, educational Kubernetes-style orchestrator implemented in both Go and
 - Repository layout
 - Quick start (Go / Python)
 - Command reference (Go CLI & Python CLI)
-- Makefile / targets
+- Makefile / targets 
 - Testing & development
 - Contributing
 
