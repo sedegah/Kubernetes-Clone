@@ -14,8 +14,8 @@ func main() {
 	cs := state.NewClusterState()
 
 	// Add nodes
-	cs.AddNode(&models.Node{Name: "node-a", CPUCapacity: 4, MemCapacity: 4096})
-	cs.AddNode(&models.Node{Name: "node-b", CPUCapacity: 2, MemCapacity: 2048})
+	cs.AddNode(&models.Node{Name: "node-a", CPUCapacity: 4, MemCapacity: 4096, Ready: true})
+	cs.AddNode(&models.Node{Name: "node-b", CPUCapacity: 2, MemCapacity: 2048, Ready: true})
 
 	// Create deployment
 	deploy := &models.Deployment{

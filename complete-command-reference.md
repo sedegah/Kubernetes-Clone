@@ -2,7 +2,20 @@
 
 ## Quick Start Setup
 
-### Go Implementation
+### Python Implementation (Primary)
+```powershell
+# Activate virtual environment
+cd python
+. .\.venv\Scripts\Activate.ps1
+
+# Install in development mode
+pip install -e .
+
+# Return to project root
+cd ..
+```
+
+### Go Implementation (Alternative)
 ```powershell
 # Set up environment (run once per session)
 $env:PATH="C:\Program Files\Go\bin;C:\msys64\mingw64\bin;" + $env:PATH
@@ -16,37 +29,43 @@ go build -o ../kclone.exe ./cmd/kclone
 cd ..
 ```
 
-### Python Implementation
-```powershell
-# Activate virtual environment
-cd python
-. .\.venv\Scripts\Activate.ps1
-
-# Install in development mode
-pip install -e .
-
-# Return to project root
-cd ..
-```
+**Database Path:** `C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db`
 
 ---
 
 ## Node Management
 
-### Go Commands
+### Python Commands (Recommended)
 ```powershell
 # Add a node
-.\kclone.exe node-add <node-name> --cpu <cores> --mem <MB> --labels <key=value,key=value>
+cd python
+. .\.venv\Scripts\Activate.ps1
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" node-add <node-name> --cpu <cores> --mem <MB> --labels <key=value,key=value>
 
 # Examples
-.\kclone.exe node-add worker-1 --cpu 4 --mem 4096
-.\kclone.exe node-add worker-2 --cpu 8 --mem 8192 --labels region=us-east,zone=1a
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" node-add worker-1 --cpu 4 --mem 4096
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" node-add worker-8 --cpu 8 --mem 8192 --labels region=us-east,zone=1a
 
 # List all nodes
-.\kclone.exe nodes
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" nodes
+
+# Remove a node (Python doesn't have remove-node command yet)
+```
+
+### Go Commands (Alternative)
+```powershell
+# Add a node
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" node-add <node-name> --cpu <cores> --mem <MB> --labels <key=value,key=value>
+
+# Examples
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" node-add worker-1 --cpu 4 --mem 4096
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" node-add worker-2 --cpu 8 --mem 8192 --labels region=us-east,zone=1a
+
+# List all nodes
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" nodes
 
 # Remove a node
-.\kclone.exe remove-node <node-name>
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" remove-node <node-name>
 ```
 
 ### Python Commands
@@ -68,108 +87,114 @@ python -m kclone nodes
 
 ## Pod Management
 
-### Go Commands
+### Python Commands (Recommended)
 ```powershell
 # Create a pod
-.\kclone.exe pod-create <pod-name> --image <image> --cpu <cores> --mem <MB> --labels <key=value,key=value>
+cd python
+. .\.venv\Scripts\Activate.ps1
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" pod-create <pod-name> --image <image> --cpu <cores> --mem <MB> --labels <key=value,key=value>
 
 # Examples
-.\kclone.exe pod-create nginx-1 --image nginx:latest --cpu 1 --mem 128
-.\kclone.exe pod-create web-app --image nginx:1.21 --cpu 2 --mem 256 --labels app=web,env=prod
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" pod-create nginx-1 --image nginx:latest --cpu 1 --mem 128
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" pod-create web-app --image nginx:1.21 --cpu 2 --mem 256 --labels app=web,env=prod
 
 # List all pods
-.\kclone.exe pods
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" pods
 
 # Delete a pod by UID
-.\kclone.exe pod-delete <pod-uid>
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" pod-delete <pod-uid>
 ```
 
-### Python Commands
+### Go Commands (Alternative)
 ```powershell
 # Create a pod
-python -m kclone pod-create <pod-name> --image <image> --cpu <cores> --mem <MB> --labels <key=value,key=value>
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" pod-create <pod-name> --image <image> --cpu <cores> --mem <MB> --labels <key=value,key=value>
 
 # Examples
-python -m kclone pod-create nginx-1 --image nginx:latest --cpu 1 --mem 128
-python -m kclone pod-create web-app --image nginx:1.21 --cpu 2 --mem 256 --labels app=web,env=prod
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" pod-create nginx-1 --image nginx:latest --cpu 1 --mem 128
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" pod-create web-app --image nginx:1.21 --cpu 2 --mem 256 --labels app=web,env=prod
 
 # List all pods
-python -m kclone pods
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" pods
 
 # Delete a pod by UID
-python -m kclone pod-delete <pod-uid>
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" pod-delete <pod-uid>
 ```
 
 ---
 
 ## Deployment Management
 
-### Go Commands
+### Python Commands (Recommended)
 ```powershell
 # Create a deployment
-.\kclone.exe deploy-create <deploy-name> --image <image> --replicas <count> --selector <key=value> --labels <key=value> --cpu <cores> --mem <MB>
+cd python
+. .\.venv\Scripts\Activate.ps1
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" deploy-create <deploy-name> --image <image> --replicas <count> --selector <key=value> --labels <key=value> --cpu <cores> --mem <MB>
 
 # Examples
-.\kclone.exe deploy-create web-servers --image nginx:latest --replicas 3 --selector app=web
-.\kclone.exe deploy-create api-backend --image python:3.9 --replicas 2 --selector app=api --labels tier=backend
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" deploy-create web-servers --image nginx:latest --replicas 3 --selector app=web
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" deploy-create api-backend --image python:3.9 --replicas 2 --selector app=api --labels tier=backend
 
 # Scale a deployment
-.\kclone.exe deploy-scale <deploy-name> --replicas <new-count>
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" deploy-scale <deploy-name> --replicas <new-count>
 
 # Example
-.\kclone.exe deploy-scale web-servers --replicas 5
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" deploy-scale web-servers --replicas 5
 ```
 
-### Python Commands
+### Go Commands (Alternative)
 ```powershell
 # Create a deployment
-python -m kclone deploy-create <deploy-name> --image <image> --replicas <count> --selector <key=value> --labels <key=value> --cpu <cores> --mem <MB>
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" deploy-create <deploy-name> --image <image> --replicas <count> --selector <key=value> --labels <key=value> --cpu <cores> --mem <MB>
 
 # Examples
-python -m kclone deploy-create web-servers --image nginx:latest --replicas 3 --selector app=web
-python -m kclone deploy-create api-backend --image python:3.9 --replicas 2 --selector app=api --labels tier=backend
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" deploy-create web-servers --image nginx:latest --replicas 3 --selector app=web
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" deploy-create api-backend --image python:3.9 --replicas 2 --selector app=api --labels tier=backend
 
 # Scale a deployment
-python -m kclone deploy-scale <deploy-name> --replicas <new-count>
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" deploy-scale <deploy-name> --replicas <new-count>
 
 # Example
-python -m kclone deploy-scale web-servers --replicas 5
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" deploy-scale web-servers --replicas 5
 ```
 
 ---
 
 ## Service Management
 
-### Go Commands
+### Python Commands (Recommended)
 ```powershell
 # Create a service
-.\kclone.exe service-create <service-name> --selector <key=value> --port <external-port> --target-port <container-port>
+cd python
+. .\.venv\Scripts\Activate.ps1
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" service-create <service-name> --selector <key=value> --port <external-port> --target-port <container-port>
 
 # Examples
-.\kclone.exe service-create web-service --selector app=web --port 80 --target-port 8080
-.\kclone.exe service-create api-service --selector app=api --port 443 --target-port 8443
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" service-create web-service --selector app=web --port 80 --target-port 8080
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" service-create api-service --selector app=api --port 443 --target-port 8443
 
 # List all services
-.\kclone.exe services
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" services
 
 # Route a request through a service (for testing)
-.\kclone.exe service-route <service-name>
+python -m kclone --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" service-route <service-name>
 ```
 
-### Python Commands
+### Go Commands (Alternative)
 ```powershell
 # Create a service
-python -m kclone service-create <service-name> --selector <key=value> --port <external-port> --target-port <container-port>
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" service-create <service-name> --selector <key=value> --port <external-port> --target-port <container-port>
 
 # Examples
-python -m kclone service-create web-service --selector app=web --port 80 --target-port 8080
-python -m kclone service-create api-service --selector app=api --port 443 --target-port 8443
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" service-create web-service --selector app=web --port 80 --target-port 8080
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" service-create api-service --selector app=api --port 443 --target-port 8443
 
 # List all services
-python -m kclone services
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" services
 
 # Route a request through a service (for testing)
-python -m kclone service-route <service-name>
+.\kclone.exe --db "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\state.db" service-route <service-name>
 ```
 
 ---
