@@ -1,13 +1,3 @@
-# **Group 43: Simplified Kubernetes Clone (K-Clone)**
-
-**Developed by: Group 43**
---
-1. Kimathi Sedegah - 22237205  
-2. Virtus Dakura - 22052950
-3. Davis Benjamin Ato - 22046566
-4. Panford Emmanuel Ekow Tawiah - 22044491
-5. Esther Eyram Ahiable -22155267
-
 ## **Table of Contents**
 
 1. Introduction
