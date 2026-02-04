@@ -76,7 +76,8 @@ Run (Python):
 
 ```bash
 cd python
-python -m venv .venv && source .venv/bin/activate
+cd "C:\Users\Kimat\Documents\Projects\Kubernetes-Clone\python"
+python -m venv .venv
 pip install -e .
 
 # Show help:
